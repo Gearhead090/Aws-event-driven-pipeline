@@ -1,9 +1,7 @@
-# Configure the AWS provider
 provider "aws" {
   region = var.aws_region
 }
 
-# --- S3 Buckets ---
 resource "aws_s3_bucket" "data_bucket" {
   bucket = "${var.project_name}-raw-data-${random_id.bucket_id.hex}"
 }
@@ -16,7 +14,6 @@ resource "aws_s3_bucket" "reports_bucket" {
   bucket = "${var.project_name}-reports-${random_id.bucket_id.hex}"
 }
 
-# --- IAM Roles and Policies ---
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -57,7 +54,6 @@ resource "aws_iam_role_policy" "s3_access_policy" {
   })
 }
 
-# --- Lambda Functions ---
 data "archive_file" "data_processor_zip" {
   type        = "zip"
   source_file = "../lambda/data_processor.py"
@@ -100,7 +96,6 @@ resource "aws_lambda_function" "report_generator" {
   }
 }
 
-# --- Event Triggers ---
 resource "aws_s3_bucket_notification" "s3_trigger" {
   bucket = aws_s3_bucket.data_bucket.id
 
