@@ -1,0 +1,24 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+crash.log
+terraform.tfvars
+.terraform/
+
+# Lambda artifacts
+*.zip
+__pycache__/
+*.pyc
+
+# Python virtual environments
+.venv/
+env/
+venv/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# AWS credentials (just in case)
+.env
+aws_credentials
