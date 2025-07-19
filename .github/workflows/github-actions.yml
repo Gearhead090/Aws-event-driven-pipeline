@@ -1,30 +1,47 @@
-name: Deploy Terraform Infrastructure
+name: 'Deploy Infrastructure with Terraform'
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  terraform:
+  terraform-deploy:
+    name: 'Terraform Deploy'
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout code
+      - name: 'Checkout Code'
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      # This is the corrected step.
+      # It uses Access Keys, which are easier to set up for a project.
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Make sure this is your desired AWS region
+
+      - name: 'Set up Terraform'
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.4.6
+          terraform_version: 1.2.0
 
-      - name: Terraform Init
+      - name: 'Terraform Init'
+        id: init
         run: terraform init
-        working-directory: infrastructure
+        working-directory: ./infrastructure
 
-      - name: Terraform Plan
-        run: terraform plan
-        working-directory: infrastructure
+      - name: 'Terraform Plan'
+        id: plan
+        run: terraform plan -no-color -out=tfplan
+        working-directory: ./infrastructure
+        # The plan step should not continue on error. 
+        # If the plan fails, the apply step should not run.
+        
+      - name: 'Terraform Apply'
+        # This step will only run if the plan is successful.
+        run: terraform apply -auto-approve -no-color tfplan
+        working-directory: ./infrastructure
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: infrastructure
