@@ -1,4 +1,4 @@
-name: 'Deploy Infrastructure with Terraform'
+name: Deploy Terraform Infrastructure
 
 on:
   push:
@@ -6,41 +6,27 @@ on:
       - main
 
 jobs:
-  terraform-deploy:
-    name: 'Terraform Deploy'
+  terraform:
+    name: Terraform Apply
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
-      - name: 'Checkout Code'
-        uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: 'Configure AWS Credentials'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }} # IMPORTANT: Use an IAM Role for security
-          aws-region: us-east-1 # Change to your desired region
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.4.6
 
-      - name: 'Set up Terraform'
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.2.0
+    - name: Terraform Init
+      run: terraform init
+      working-directory: infrastructure
 
-      - name: 'Terraform Init'
-        id: init
-        run: terraform init
-        working-directory: ./infrastructure
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: infrastructure
 
-      - name: 'Terraform Plan'
-        id: plan
-        run: terraform plan -no-color -out=tfplan
-        working-directory: ./infrastructure
-        continue-on-error: true
-
-      - name: 'Terraform Apply'
-        if: steps.plan.outcome == 'success'
-        run: terraform apply -auto-approve -no-color tfplan
-        working-directory: ./infrastructure
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      working-directory: infrastructure
